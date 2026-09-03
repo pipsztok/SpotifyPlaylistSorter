@@ -23,6 +23,9 @@ class SpotifyHelper:
         self.me = self.sp.me()
         self.debug = debug
 
+    def get_username(self) -> str:
+        return self.me['display_name']
+
     def get_user_playlist(self):
         playlists = self.sp.current_user_playlists(limit=50)
         my_playlists = []
@@ -49,4 +52,4 @@ class SpotifyHelper:
             for idx, item in enumerate(results['items']):
                 track = item['track']
                 print(idx, track['artists'][0]['name'], " – ", track['name'])
-        return results
+        return results['items']

@@ -1,7 +1,26 @@
 import sys,os
 import curses
+from spotify_helper import SpotifyHelper
 
-from pygments.unistring import xid_start
+
+class Controller:
+    def __init__(self):
+        self.sh = SpotifyHelper()
+        self.username = self.sh.get_username()
+        self.recent = self.sh.get_recently_played_tracks()
+        self.playlists = self.sh.get_user_playlist()
+        self.playlists_to_add = []
+        self.playlists_to_remove = []
+        self.playlists_tracks = {}
+
+    def recent_track_title(self):
+        return self.recent[0]['track']['name']
+
+    def list_tracks_in_playlists(self):
+        # for each playlist do 'playlist_id' -> ['song1_id', 'song2_id', ...]
+        pass
+
+    # find which playlists is the song in
 
 
 class Line:
@@ -18,12 +37,12 @@ class Line:
         return int((Line.width // 2) - (len(text) // 2) - len(text) % 2)
 
 
-def add_lines() -> list[Line]:
+def add_lines(ctrl) -> list[Line]:
     x_center = int(Line.width // 2)
     lines_list = [
         Line("Username   |"[:Line.width-1], 1, x_center - 12, line_break=False),
         Line("log out"[:Line.width - 1], 1, x_center + 3),
-        Line("song title"[:Line.width - 1], 6),
+        Line(f"{ctrl.recent_track_title()}"[:Line.width - 1], 6),
         Line("|<<"[:Line.width - 1], 8, x_center - 9, line_break=False),
         Line("(_▶_)"[:Line.width - 1], 8, x_center - 3, line_break=False),
         Line(">>|"[:Line.width - 1], 8, x_center + 5, line_break=False),
@@ -47,6 +66,7 @@ def draw_menu(stdscr):
     cursor_y = 0
     selection_symbol = '$'
     line_num = 0
+    ctrl = Controller()
 
     # Clear and refresh the screen for a blank canvas
     stdscr.clear()
@@ -78,7 +98,7 @@ def draw_menu(stdscr):
         cursor_y = max(0, cursor_y)
         cursor_y = min(height-1, cursor_y)
 
-        lines = add_lines()
+        lines = add_lines(ctrl)
 
         if k == curses.KEY_RIGHT:
             # cursor_x = cursor_x + 1

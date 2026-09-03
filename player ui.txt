@@ -28,3 +28,19 @@
    [   ] Playlist name 3
 
    change playlist list
+
+
+Model:
+- spotify username
+- recent list
+- currently played
+- playlist list (with songs id lists)
+- to which add, from which remove
+- threads/tasks support
+
+- ui elements - focus ?
+- spotify helper
+- preview player
+
+to-do:
+- refactor UI "components"
