@@ -3,6 +3,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from spotify_helper import SpotifyHelper
 from spotify_preview import get_spotify_preview_url
 from preview_player import PreviewPlayer
+from textual_app import SpotifyPlaylistSorterApp
 
 scope = ["user-library-read",
          "playlist-read-private",
@@ -38,8 +39,11 @@ print(playlists)
 
 preview_url = get_spotify_preview_url('1301WleyT98MSxVHPZCA6M')
 print(preview_url)
-player = PreviewPlayer()
-player.play_preview(preview_url)
+PreviewPlayer.init()
+PreviewPlayer.play_preview(preview_url)
 
 
-
+if __name__ == "__main__":
+    pass
+    # app = SpotifyPlaylistSorterApp()
+    # app.run()

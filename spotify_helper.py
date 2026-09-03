@@ -44,7 +44,7 @@ class SpotifyHelper:
         return my_playlists
 
     def get_recently_played_tracks(self):
-        results = self.sp.current_user_saved_tracks()
+        results = self.sp.current_user_recently_played()
         if self.debug:
             for idx, item in enumerate(results['items']):
                 track = item['track']
