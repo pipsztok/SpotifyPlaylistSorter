@@ -18,6 +18,8 @@ class Controller:
 
         self.line_num = 0
         self.playlist_list_start = 0
+        self.selection_symbol = '$'
+        self.lines = []
 
         self.load_spotify_data()
 
