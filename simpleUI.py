@@ -8,12 +8,13 @@ class Line:
     height = 0
     playlist_window_height = 0
 
-    def __init__(self, text: str, offset, x_start=-1, interactive=True, line_break=True):
+    def __init__(self, text: str, offset, x_start=-1, function=None, interactive=True, line_break=True):
         self.text = text
         self.offset = offset
         self.x_start = self.calculate_start(text) if x_start == -1 else x_start
         self.interactive = interactive
         self.line_break = line_break
+        self.function = function
 
     @staticmethod
     def x_center():
@@ -31,11 +32,11 @@ class Line:
 def generate_lines_main_screen(ctrl):
     ctrl.lines = [
         Line(f"{ctrl.username}   |"[:Line.width-1], 1, Line.x_center() - 15, line_break=False),
-        Line("log out"[:Line.width - 1], 1, Line.x_center() + 3),
-        Line(f"{ctrl.recent_track_title()}"[:Line.width - 1], 6),
-        Line("|<<"[:Line.width - 1], 8, Line.x_center() - 9, line_break=False),
-        Line("(_▶_)"[:Line.width - 1], 8, Line.x_center() - 3, line_break=False),
-        Line(">>|"[:Line.width - 1], 8, Line.x_center() + 5, line_break=False),
+        Line("log out"[:Line.width - 1], 1, Line.x_center() + 3, print_line_num),
+        Line(f"{ctrl.current_track_title()}"[:Line.width - 1], 6, interactive=False),
+        Line("|<<"[:Line.width - 1], 8, Line.x_center() - 9, ctrl.prev_track, line_break=False),
+        Line("(_▶_)"[:Line.width - 1], 8, Line.x_center() - 3, ctrl.play_current_track, line_break=False), # pause
+        Line(">>|"[:Line.width - 1], 8, Line.x_center() + 5, ctrl.next_track, line_break=False),
         Line("<3"[:Line.width - 1], 8, Line.x_center() + 13),
         Line((" -"*(Line.x_center()))[:Line.width - 1], 10, interactive=False),
     ]
@@ -54,7 +55,9 @@ def generate_lines_playlist_choice_screen(ctrl):
 def add_playlists_list(ctrl):
     names = ctrl.list_playlists_names()
     for i in range(min(len(names), Line.playlist_window_height)):
-        ctrl.lines.append(Line(f"[   ] {names[i + ctrl.playlist_list_start]}"[:Line.width - 1], 12 + i, 3))
+        ctrl.lines.append(Line(f"[ {'x' if ctrl.selected[i + ctrl.playlist_list_start] else ' '} ] "
+                               f"{names[i + ctrl.playlist_list_start]}"[:Line.width - 1],
+                               12 + i, 3, ctrl.select_playlist))
 
     if len(names) > Line.playlist_window_height + ctrl.playlist_list_start + 1:
         ctrl.lines.append(Line("      ..."[:Line.width - 1], Line.height - 5, 3, interactive=False))
@@ -95,6 +98,13 @@ def render_playlist_choice_screen(stdscr, ctrl):
     for i in range(len(ctrl.lines)):
         render_line(stdscr, ctrl.lines[i])
 
+def execute_action(ctrl):
+    ctrl.name = (ctrl.lines[ctrl.line_num]).text[6::]
+    if (ctrl.lines[ctrl.line_num]).function is not None:
+        (ctrl.lines[ctrl.line_num]).function()
+
+def print_line_num():
+    print(1)
 
 def draw_screen(stdscr):
     stdscr.nodelay(True)
@@ -123,13 +133,16 @@ def draw_screen(stdscr):
 
         if not ctrl.data_loaded:
             render_loading_screen(stdscr)
+            stdscr.refresh()
             continue
         else:
             render_main_screen(stdscr, ctrl)
             # render_playlist_choice_screen(stdscr, ctrl)
         # render_main_menu(stdscr, ctrl, k)
 
-        if k == curses.KEY_RIGHT:
+        if k == ord(' '):
+            execute_action(ctrl)
+        elif k == curses.KEY_RIGHT:
             while ctrl.line_num < len(ctrl.lines) - 1:
                 ctrl.line_num = min(ctrl.line_num + 1, len(ctrl.lines) - 1)
                 if ctrl.lines[ctrl.line_num].interactive:
