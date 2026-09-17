@@ -36,6 +36,7 @@ Model:
 - currently played
 - playlist list (with songs id lists)
 - to which add, from which remove
+- displayed playlists
 - threads/tasks support
 
 - ui elements - focus ?
