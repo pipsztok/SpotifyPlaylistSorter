@@ -1,6 +1,7 @@
 from spotify_helper import SpotifyHelper
 from spotify_preview import get_spotify_preview_url
 from preview_player import PreviewPlayer
+# from simpleUI_screens import MainScreen
 import threading
 
 
@@ -19,28 +20,25 @@ class Controller:
         self.playlists_tracks = {}
         self.current_song_index = 0
 
-        self.line_num = 0
-        self.playlist_list_start = 0
-        self.selection_symbol = '$'
-        self.lines = []
+        self.screen = None
         self.selected = []
         self.name = ""
 
         PreviewPlayer.init()
-        self.load_spotify_data()
 
-    def load_spotify_data(self):
+    def load_spotify_data(self, next_screen):
         def worker():
             self.username = self.sh.get_username()
             self.recent = self.sh.get_recently_played_tracks()
             self.playlists = self.sh.get_user_playlist()
             self.selected = [False] * len(self.playlists)
-            self.on_done()
+            self.on_done(next_screen)
             # add error handling
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def on_done(self):
+    def on_done(self, next_screen):
+        self.screen = next_screen
         self.data_loaded = True
 
     def select_playlist(self):
@@ -70,10 +68,12 @@ class Controller:
 
     def next_track(self):
         self.current_song_index = min(self.current_song_index + 1, len(self.recent) - 1)
-        self.play_current_track()
+        # self.play_current_track()
+        PreviewPlayer.stop_preview()
 
     def prev_track(self):
         self.current_song_index = max(self.current_song_index - 1, 0)
-        self.play_current_track()
+        # self.play_current_track()
+        PreviewPlayer.stop_preview()
 
     # find which playlists is the song in

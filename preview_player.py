@@ -17,6 +17,7 @@ class PreviewPlayer:
 
     @staticmethod
     def play_preview(url):
+        # send to another thread
         response = requests.get(url)
 
         with open(os.path.join(PreviewPlayer.preview_dir, "preview.mp3"), "wb") as f:
@@ -36,5 +37,9 @@ class PreviewPlayer:
             pygame.mixer.music.pause()
         else:
             pygame.mixer.music.play()
+
+    @staticmethod
+    def stop_preview():
+        pygame.mixer.music.stop()
 
 # url = "https://p.scdn.co/mp3-preview/9f6b0748625b642efa50078f9a9c11e88ef5e6c2"
