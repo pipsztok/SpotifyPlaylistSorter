@@ -1,6 +1,7 @@
 import os
 import requests
 import pygame
+import threading
 
 
 class PreviewPlayer:
@@ -16,23 +17,27 @@ class PreviewPlayer:
             cls._initialized = True
 
     @staticmethod
-    def play_preview(url):
-        # send to another thread
-        response = requests.get(url)
+    def load_preview(url):
+        def worker():
+            pygame.mixer.music.unload()
+            # send to another thread
+            response = requests.get(url)
 
-        with open(os.path.join(PreviewPlayer.preview_dir, "preview.mp3"), "wb") as f:
-            f.write(response.content)
+            with open(os.path.join(PreviewPlayer.preview_dir, "preview.mp3"), "wb") as f:
+                f.write(response.content)
 
-        pygame.mixer.music.stop()
-        pygame.mixer.music.load(os.path.join(PreviewPlayer.preview_dir, "preview.mp3"))
-        pygame.mixer.music.play()
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load(os.path.join(PreviewPlayer.preview_dir, "preview.mp3"))
+            # pygame.mixer.music.play()
+
+        threading.Thread(target=worker, daemon=True).start()
 
         # Poczekaj aż odtwarzanie się skończy
         # while pygame.mixer.music.get_busy():
         #     pygame.time.Clock().tick(10)
 
     @staticmethod
-    def pause_preview():
+    def play_pause_preview():
         if not PreviewPlayer._paused:
             pygame.mixer.music.pause()
         else:

@@ -1,3 +1,5 @@
+from idlelib.autocomplete import TRY_A
+
 from controller import Controller
 import curses
 from abc import ABC, abstractmethod
@@ -32,16 +34,6 @@ class Screen(ABC):
 
     def render_line(self, line):
         self._stdscr.addstr(line.offset, line.x_start, line.text)
-
-    def add_playlists_list(self):
-        names = self._ctrl.list_playlists_names()
-        for i in range(min(len(names), self.playlist_window_height)):
-            self.lines.append(Line(f"[ {'x' if self._ctrl.selected[i + self.playlist_list_start] else ' '}"
-                                   f" ] {names[i + self.playlist_list_start]}"[:Line.width - 1],
-                                   self.playlist_window_start + i, 3, self._ctrl.select_playlist))
-
-        if len(names) > self.playlist_window_height + self.playlist_list_start + 1:
-            self.lines.append(Line("      ..."[:Line.width - 1], Line.height - 5, 3, interactive=False))
 
     def render_common_elements(self):
         # Render status bar
@@ -110,12 +102,12 @@ class MainScreen(Screen):
 
         if self.line_num == 1:
             (self.lines[self.line_num]).function(self.line_num)
-        elif self.line_num == len(self.lines) - 1:
+        elif self.line_num in (3, 4, 5, 6, len(self.lines) - 1):
             (self.lines[self.line_num]).function()
         else:
-            self._ctrl.name = (self.lines[self.line_num]).text[6::]
+            name = (self.lines[self.line_num]).text[6::]
             if (self.lines[self.line_num]).function is not None:
-                (self.lines[self.line_num]).function()
+                (self.lines[self.line_num]).function(name)
 
     def controls(self, k):
         # if k != -1:
@@ -145,6 +137,17 @@ class MainScreen(Screen):
                                            len(self._ctrl.playlists) - self.playlist_window_height - 1)
         elif k == curses.KEY_UP:
             self.playlist_list_start = max(self.playlist_list_start - 1, 0)
+
+    def add_playlists_list(self):
+        names = self._ctrl.list_playlists_names(True)
+        for i in range(min(len(names), self.playlist_window_height)):
+            self.lines.append(Line(f"[ {'x' if names[i + self.playlist_list_start] in self._ctrl.current_song_playlists else ' '}"
+                                   f" ] {names[i + self.playlist_list_start]}"[:Line.width - 1],
+                                   self.playlist_window_start + i, 3,
+                                   lambda _name: self._ctrl.toggle_select_playlist(_name)))
+
+        if len(names) > self.playlist_window_height + self.playlist_list_start + 1:
+            self.lines.append(Line("      ..."[:Line.width - 1], Line.height - 5, 3, interactive=False))
 
     def print_line_num(self, line_num):
         print(line_num)
@@ -185,8 +188,14 @@ class PlaylistChoiceScreen(Screen):
         self.render_common_elements()
 
     def execute_action(self):
-        if (self.lines[self.line_num]).function is not None:
+        if (self.lines[self.line_num]).function is None:
+            return
+
+        if self.line_num == 1:
             (self.lines[self.line_num]).function()
+        else:
+            name = (self.lines[self.line_num]).text[6::]
+            (self.lines[self.line_num]).function(name)
 
     def controls(self, k):
         if k == ord(' '):
@@ -214,6 +223,18 @@ class PlaylistChoiceScreen(Screen):
                                            len(self._ctrl.playlists) - self.playlist_window_height - 1)
         elif k == curses.KEY_UP:
             self.playlist_list_start = max(self.playlist_list_start - 1, 0)
+
+    def add_playlists_list(self):
+        names = self._ctrl.list_playlists_names()
+        for i in range(min(len(names), self.playlist_window_height)):
+            self.lines.append(Line(f"[ {'x' if i in self._ctrl.selected_playlists else ' '}"
+                                   f" ] {names[i + self.playlist_list_start]}"[:Line.width - 1],
+                                   self.playlist_window_start + i, 3,
+                                   lambda _name: self._ctrl.toggle_select_playlist(_name),
+                                   self._ctrl.select_playlist))
+
+        if len(names) > self.playlist_window_height + self.playlist_list_start + 1:
+            self.lines.append(Line("      ..."[:Line.width - 1], Line.height - 5, 3, interactive=False))
 
     def switch_to_main_screen(self):
         self._ctrl.screen = MainScreen.get_instance()

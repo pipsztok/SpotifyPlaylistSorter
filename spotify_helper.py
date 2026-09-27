@@ -53,3 +53,25 @@ class SpotifyHelper:
                 track = item['track']
                 print(idx, track['artists'][0]['name'], " – ", track['name'])
         return results['items']
+
+    def get_playlist_tracks_names(self, playlist_id):
+        tracks = self.sp.playlist_items(playlist_id, limit=50, offset=0)
+        names = []
+        offset = 50
+        while len(tracks['items']) != 0:
+            for item in tracks['items']:
+                names.append(item['item']['name'])
+                if self.debug:
+                    print(item['item']['name'])
+
+            tracks = self.sp.playlist_items(playlist_id, limit=50, offset=offset)
+            offset += 50
+
+        return names
+
+
+    def add_to_playlist(self, playlist, track):
+        result = self.sp.playlist_add_items(playlist, track)
+
+    def remove_from_playlist(self, playlist, track):
+        result = self.sp.playlist_remove_all_occurrences_of_items(playlist, track)
